@@ -4,18 +4,28 @@ function App() {
   const [city, setCity] = useState("");
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
   const fetchWeather = async () => {
+    if (!city) return;
+
     try {
+      setLoading(true);
       setError("");
+      setWeather(null);
+
       const response = await fetch(`${API_URL}/api/weather/${city}`);
+
       if (!response.ok) throw new Error();
+
       const data = await response.json();
       setWeather(data);
     } catch {
       setError("City not found");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,10 +58,18 @@ function App() {
             onChange={(e) => setCity(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && fetchWeather()}
           />
-          <button onClick={fetchWeather}>Search</button>
+          <button onClick={fetchWeather} disabled={loading}>
+            {loading ? "..." : "Search"}
+          </button>
         </div>
 
         {error && <p className="error">{error}</p>}
+
+        {loading && (
+          <div className="loading">
+            Loading weather...
+          </div>
+        )}
 
         {weather && (
           <div className="result">
@@ -137,6 +155,19 @@ function App() {
 
         button:hover {
           transform: scale(1.05);
+        }
+
+        .loading {
+           margin-top: 20px;
+           font-size: 18px;
+           font-weight: 500;
+           animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+           0% { opacity: 0.4; }
+           50% { opacity: 1; }
+           100% { opacity: 0.4; }
         }
 
         .result {
